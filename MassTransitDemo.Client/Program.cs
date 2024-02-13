@@ -18,7 +18,13 @@ builder.Services.AddMassTransit(x =>
 {
     x.SetKebabCaseEndpointNameFormatter();
     
-    x.AddConsumers(typeof(Program).Assembly);
+    //DIRECT
+    x.AddConsumer<PriorityOrderConsumer, PriorityOrderConsumerDefinition>();
+    x.AddConsumer<RegularOrderConsumer, RegularOrderConsumerDefinition>();
+    
+    // FANOUT
+    x.AddConsumer<FileLogConsumer, FileLogConsumerDefinition>();
+    x.AddConsumer<ConsoleLogConsumer, ConsoleLogConsumerDefinition>();
     
     x.UsingRabbitMq((context, cfg) =>
     {
@@ -27,42 +33,7 @@ builder.Services.AddMassTransit(x =>
             h.Username("guest");
             h.Password("guest");
         });
-        
-        
-        cfg.Message<SubmitOrder>(x => x.SetEntityName("submitorder"));
-        cfg.Publish<SubmitOrder>(x =>
-        {
-            x.ExchangeType = ExchangeType.Direct;
-        });
-        cfg.Send<SubmitOrder>(x =>
-        {
-            x.UseCorrelationId(context => context.TransactionId);
-            x.UseRoutingKeyFormatter(context => context.Message.CustomerType);
-        });
 
-
-        cfg.ReceiveEndpoint("priority-orders", x =>
-        {
-            x.ConfigureConsumeTopology = false;
-            x.Consumer<OrderConsumer>(context);
-            x.Bind("submitorder", s => 
-            {
-                s.RoutingKey = "PRIORITY";
-                s.ExchangeType = ExchangeType.Direct;
-            });
-        });
-
-        cfg.ReceiveEndpoint("regular-orders", x =>
-        {
-            x.ConfigureConsumeTopology = false;
-            x.Consumer<OrderConsumer>(context);
-            x.Bind("submitorder", s => 
-            {
-                s.RoutingKey = "REGULAR";
-                s.ExchangeType = ExchangeType.Direct;
-            });
-        });
-        
         cfg.ConfigureEndpoints(context);
     });
 });

@@ -7,4 +7,8 @@
         <RootNamespace>MassTransitDemo.Abstract</RootNamespace>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="MassTransit.Abstractions" Version="8.1.3" />
+    </ItemGroup>
+
 </Project>

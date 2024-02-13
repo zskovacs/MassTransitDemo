@@ -4,6 +4,7 @@ using MassTransitDemo.Abstract;
 using MassTransitDemo.Server;
 using RabbitMQ.Client;
 using Serilog;
+using Log = MassTransitDemo.Abstract.Log;
 
 var builder = WebApplication.CreateBuilder();
 builder.Services.AddHostedService<MessagePublisher>();
@@ -17,9 +18,6 @@ builder.Logging.AddSerilog(logger);
 builder.Services.AddMassTransit(x =>
 {
     x.SetKebabCaseEndpointNameFormatter();
-    
-    x.AddConsumers(typeof(Program).Assembly);
-    
     x.UsingRabbitMq((context, cfg) =>
     {
         cfg.Host("localhost", "/", h =>
@@ -28,17 +26,18 @@ builder.Services.AddMassTransit(x =>
             h.Password("guest");
         });
         
-        cfg.Message<SubmitOrder>(x => x.SetEntityName("submitorder"));
+        cfg.Message<SubmitOrder>(x => x.SetEntityName("submit-order"));
         cfg.Publish<SubmitOrder>(x =>
         {
             x.ExchangeType = ExchangeType.Direct;
         });
         cfg.Send<SubmitOrder>(x =>
         {
-            x.UseCorrelationId(context => context.TransactionId);
-            x.UseRoutingKeyFormatter(context => context.Message.CustomerType);
+            x.UseCorrelationId(c => c.TransactionId);
+            x.UseRoutingKeyFormatter(c => c.Message.CustomerType);
         });
         
+        cfg.Message<Log>(x => x.SetEntityName("log-shared"));
         
         cfg.ConfigureEndpoints(context);
     });

@@ -19,9 +19,14 @@ public class MessagePublisher(IBus bus) : BackgroundService
                 await bus.Publish(new SubmitOrder() { TransactionId = InVar.Id, CustomerType = "REGULAR", Order = "Fagyi"}, stoppingToken);
             }
             
-            if (pressed.Key == ConsoleKey.E)
+            if (pressed.Key == ConsoleKey.W)
             {
                 await bus.Publish(new SubmitOrder() { TransactionId = InVar.Id, CustomerType = "PRIORITY", Order = "Kávé"}, stoppingToken);
+            }
+            
+            if (pressed.Key == ConsoleKey.E)
+            {
+                await bus.Publish(new Log() { Content = "FANOUT SENT"}, stoppingToken);
             }
 
 

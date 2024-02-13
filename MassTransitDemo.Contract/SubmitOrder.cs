@@ -1,5 +1,8 @@
-﻿namespace MassTransitDemo.Abstract;
+﻿using MassTransit;
 
+namespace MassTransitDemo.Abstract;
+
+[MessageUrn("submit-order")]
 public record SubmitOrder
 {
     public string CustomerType { get; init; }
